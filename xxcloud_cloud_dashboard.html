@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XXCLOUD - Dashboard Manajemen Cloud</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Smooth state transitions */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Focus rings for accessibility */
+        *:focus-visible {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans selection:bg-brand-100 selection:text-brand-900">
+
+    <!-- Login View -->
+    <div id="login-view" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-brand-50 text-brand-600 mb-4">
+                    <i class="fa-solid fa-cloud-bolt text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900">Masuk ke XXCLOUD</h1>
+                <p class="text-sm text-slate-500 mt-2">Kelola semua penyimpanan cloud Anda di satu tempat.</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-5">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" id="email" required placeholder="budi@example.com" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" autocomplete="email">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Kata Sandi</label>
+                    <input type="password" id="password" required placeholder="••••••••" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow" autocomplete="current-password">
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                        <span class="text-sm text-slate-600">Ingat saya</span>
+                    </label>
+                    <span class="text-sm font-medium text-slate-400 cursor-not-allowed" title="Fitur dalam pengembangan">Lupa sandi? (Segera Hadir)</span>
+                </div>
+                
+                <!-- Area Pesan Error Login -->
+                <div id="login-error" class="hidden text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100"></div>
+
+                <button type="submit" id="btn-login" class="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors flex items-center justify-center gap-2">
+                    Masuk
+                </button>
+            </form>
+
+            <div class="mt-6 pt-6 border-t border-slate-100">
+                <button type="button" onclick="showComingSoon(this)" class="w-full py-2.5 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors flex items-center justify-center gap-3">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5">
+                    Lanjutkan dengan Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Wrapper -->
+    <div id="dashboard-view" class="hidden h-screen w-full flex-row overflow-hidden">
+        <!-- Mobile Overlay -->
+        <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-200 transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-300 flex flex-col h-full">
+            <div class="p-4 border-b border-slate-200 shrink-0 flex items-center gap-2">
+                <i class="fa-solid fa-cloud-bolt text-brand-600 text-xl"></i>
+                <span class="font-bold text-lg text-slate-900 tracking-tight">XXCLOUD</span>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto p-3 space-y-1">
+                    <p class="text-xs text-slate-500 truncate">budi.pribadi@gmail.com</p>
+                </div>
+                <div class="w-2 h-2 rounded-full bg-emerald-500" title="Sinkronisasi Aktif"></div>
+            </div>
+
+            <div class="px-3 py-2 flex items-center gap-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
+                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                    <i class="fa-brands fa-google text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-700 truncate">Drive Pribadi</p>
+                    <p class="text-xs text-slate-500 truncate">[email.pribadi]@gmail.com</p>
+                </div>
+                <div class="w-2 h-2 rounded-full bg-emerald-500" title="Sinkronisasi Aktif"></div>
+            </div>
+
+            <div class="px-3 py-2 flex items-center gap-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
+                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                    <i class="fa-brands fa-google text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-700 truncate">Proyek Sampingan</p>
+                    <p class="text-xs text-slate-500 truncate">[email.freelance]@gmail.com</p>
+                </div>
+                <div class="w-2 h-2 rounded-full bg-emerald-500" title="Sinkronisasi Aktif"></div>
+            </div>
+        </nav>
+
+        <!-- E2E Encryption Status -->
+        <div class="p-4 m-3 mt-auto bg-emerald-50 border border-emerald-100 rounded-xl">
+            <div class="flex items-center gap-2 text-emerald-700 mb-1">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span class="text-sm font-semibold">Keamanan E2E</span>
+            </div>
+            <p class="text-xs text-emerald-600 leading-relaxed">
+                Semua koneksi data dienkripsi secara end-to-end.
+            </p>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 h-screen">
+        
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 z-10 shrink-0">
+            <div class="flex items-center gap-4 flex-1">
+                <button class="lg:hidden text-slate-500 hover:text-slate-700" onclick="toggleSidebar()" aria-label="Buka menu">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                
+                <!-- Global Search -->
+                <div class="relative w-full max-w-md hidden sm:block">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="global-search" oninput="handleSearch(event)" placeholder="Cari file, folder, di semua Drive..." class="w-full pl-10 pr-4 py-2 bg-slate-100 border-transparent rounded-lg text-sm focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition-all outline-none" aria-label="Pencarian Global">
+                </div>
+            </div>
+
+            <!-- Right Actions -->
+            <div class="flex items-center gap-3 sm:gap-4 shrink-0 ml-4">
+                
+                <!-- Sync Status -->
+                <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-slate-500" id="sync-status">
+                    <i class="fa-solid fa-check-circle text-emerald-500"></i>
+                    <span>Tersinkronisasi</span>
+                </div>
+
+                <div class="w-px h-6 bg-slate-200 hidden sm:block"></div>
+
+                <!-- Notifications -->
+                <div class="relative">
+                    <button onclick="toggleNotifications()" class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors focus-visible:ring-2" aria-label="Notifikasi">
+                        <i class="fa-regular fa-bell text-lg"></i>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    </button>
+                    
+                    <!-- Notifications Dropdown -->
+                    <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white border border-slate-200 shadow-lg rounded-xl z-50 py-2">
+                        <div class="px-4 py-2 border-b border-slate-100 flex justify-between items-center">
+                            <h3 class="font-semibold text-slate-800 text-sm">Notifikasi</h3>
+                            <button class="text-xs text-brand-600 hover:underline">Tandai sudah dibaca</button>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto" id="notif-list">
+                            <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile -->
+            <button onclick="handleLogout()" class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-medium text-sm focus-visible:ring-2 focus-visible:ring-offset-2 hover:bg-brand-700 transition-colors" aria-label="Keluar" title="Keluar">
+                U
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Search (Visible only on small screens) -->
+        <div class="p-4 bg-white border-b border-slate-200 sm:hidden shrink-0">
+            <div class="relative w-full">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                <input type="text" oninput="handleSearch(event)" placeholder="Cari file..." class="w-full pl-10 pr-4 py-2 bg-slate-100 border-transparent rounded-lg text-sm focus:bg-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition-all outline-none">
+            </div>
+        </div>
+
+        <!-- Main Scrollable Area -->
+        <main class="flex-1 overflow-y-auto bg-slate-50 relative h-full">
+            
+            <!-- 1. DASHBOARD TAB -->
+            <div id="tab-dashboard" class="tab-content active p-4 sm:p-6 lg:p-8">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Selamat pagi, [Nama Pengguna]</h1>
+                        <p class="text-sm text-slate-500 mt-1">Ini ringkasan dari semua cloud Anda hari ini.</p>
+                    </div>
+                    <button onclick="switchTab('files')" class="hidden sm:block text-sm font-medium text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-4 py-2 rounded-lg transition-colors">
+                        Unggah File
+                    </button>
+                </div>
+
+                <!-- Storage Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <!-- Total Storage -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+                                <i class="fa-solid fa-database text-lg"></i>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded">Semua Akun</span>
+                        </div>
+                        <h3 class="text-slate-500 text-sm font-medium">Total Penyimpanan</h3>
+                        <div class="mt-1 flex items-baseline gap-2">
+                            <span class="text-2xl font-bold text-slate-900">112.5 GB</span>
+                            <span class="text-sm text-slate-500">/ 145 GB</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">* [Data Simulasi]</p>
+                        <!-- Progress bar -->
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 mt-4">
+                            <div class="bg-brand-500 h-1.5 rounded-full" style="width: 77%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Encrypted Files -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <i class="fa-solid fa-lock text-lg"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-slate-500 text-sm font-medium">File Terenkripsi (E2E)</h3>
+                        <div class="mt-1 flex items-baseline gap-2">
+                            <span class="text-2xl font-bold text-slate-900">4,208</span>
+                            <span class="text-sm text-slate-500">Item</span>
+                        </div>
+                        <p class="text-xs text-emerald-600 mt-4 font-medium"><i class="fa-solid fa-arrow-trend-up mr-1"></i> +12% dari minggu lalu</p>
+                    </div>
+
+                    <!-- Shared Externally -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                                <i class="fa-solid fa-share-nodes text-lg"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-slate-500 text-sm font-medium">Dibagikan ke Publik</h3>
+                        <div class="mt-1 flex items-baseline gap-2">
+                            <span class="text-2xl font-bold text-slate-900">24</span>
+                            <span class="text-sm text-slate-500">Tautan Aktif</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-4">3 tautan kedaluwarsa hari ini</p>
+                    </div>
+                </div>
+
+                <!-- Recent Files Preview (Mini Table) -->
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h2 class="font-semibold text-slate-800 text-sm">Aktivitas Terakhir</h2>
+                        <button onclick="switchTab('files')" class="text-xs font-medium text-brand-600 hover:text-brand-700">Lihat Semua</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-500 uppercase bg-slate-50/50 border-b border-slate-100">
+                                <tr>
+                                    <th scope="col" class="px-5 py-3 font-medium">Nama File</th>
+                                    <th scope="col" class="px-5 py-3 font-medium hidden sm:table-cell">Lokasi Drive</th>
+                                    <th scope="col" class="px-5 py-3 font-medium text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-recent-files">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. FILES TAB -->
+            <div id="tab-files" class="tab-content p-4 sm:p-6 lg:p-8 h-full flex flex-col">
+                <div class="flex justify-between items-center mb-6 shrink-0">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Semua File</h1>
+                        <p class="text-sm text-slate-500 mt-1">Gabungan dokumen dari semua akun terhubung.</p>
+                    </div>
+                </div>
+
+                <!-- Filters & Controls -->
+                <div class="flex flex-col sm:flex-row gap-3 mb-4 shrink-0">
+                    <select class="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block px-3 py-2 outline-none">
+                        <option value="all">Semua Akun</option>
+                        <option value="work">Pekerjaan Utama</option>
+                        <option value="personal">Drive Pribadi</option>
+                        <option value="freelance">Proyek Sampingan</option>
+                    </select>
+                    <select class="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block px-3 py-2 outline-none">
+                        <option value="all">Semua Tipe</option>
+                        <option value="document">Dokumen</option>
+                        <option value="spreadsheet">Spreadsheet</option>
+                        <option value="image">Gambar</option>
+                    </select>
+                </div>
+
+                <!-- Main File List -->
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
+                    <div class="overflow-x-auto flex-1 h-full">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-200 sticky top-0 z-10">
+                                <tr>
+                                    <th scope="col" class="px-5 py-4 font-medium w-7/12 sm:w-5/12">Nama File</th>
+                                    <th scope="col" class="px-5 py-4 font-medium hidden sm:table-cell">Akun Asal</th>
+                                    <th scope="col" class="px-5 py-4 font-medium hidden md:table-cell">Keamanan</th>
+                                    <th scope="col" class="px-5 py-4 font-medium hidden lg:table-cell">Terakhir Diubah</th>
+                                    <th scope="col" class="px-5 py-4 font-medium text-right rounded-tr-xl">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="main-file-list" class="divide-y divide-slate-100">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                        
+                        <!-- Empty Search State -->
+                        <div id="empty-state" class="hidden flex-col items-center justify-center p-12 text-center h-full">
+                            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4">
+                                <i class="fa-solid fa-magnifying-glass text-2xl"></i>
+                            </div>
+                            <h3 class="text-slate-800 font-medium mb-1">Tidak ada file ditemukan</h3>
+                            <p class="text-sm text-slate-500">Coba gunakan kata kunci lain untuk pencarian.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. ANALYTICS TAB -->
+            <div id="tab-analytics" class="tab-content p-4 sm:p-6 lg:p-8">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-slate-900">Analitik Penyimpanan</h1>
+                    <p class="text-sm text-slate-500 mt-1">Pantau kapasitas total dari setiap cloud yang terhubung.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Donut Chart Card -->
+                    <div class="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
+                        <h2 class="font-semibold text-slate-800 text-sm mb-6">Distribusi Penyimpanan (Terpakai)</h2>
+                        <div class="relative h-64 w-full flex items-center justify-center">
+                            <canvas id="storageChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Breakdown -->
+                    <div class="flex flex-col gap-4">
+                        <div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                                <i class="fa-brands fa-google"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center mb-1">
+                                    <h3 class="text-sm font-semibold text-slate-800">Pekerjaan Utama</h3>
+                                    <span class="text-xs font-medium text-slate-500">45 GB / 100 GB</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                    <div class="bg-blue-500 h-1.5 rounded-full" style="width: 45%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                                <i class="fa-brands fa-google"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center mb-1">
+                                    <h3 class="text-sm font-semibold text-slate-800">Drive Pribadi</h3>
+                                    <span class="text-xs font-medium text-slate-500">14 GB / 15 GB</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                    <div class="bg-red-500 h-1.5 rounded-full" style="width: 93%"></div>
+                                </div>
+                                <p class="text-xs text-red-500 mt-2 font-medium"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Hampir Penuh</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+                                <i class="fa-brands fa-google"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center mb-1">
+                                    <h3 class="text-sm font-semibold text-slate-800">Proyek Sampingan</h3>
+                                    <span class="text-xs font-medium text-slate-500">3.5 GB / 30 GB</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                    <div class="bg-purple-500 h-1.5 rounded-full" style="width: 11%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Share Modal Backdrop -->
+    <div id="share-modal-backdrop" class="fixed inset-0 bg-slate-900/50 z-50 hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm" onclick="closeShareModal()"></div>
+    
+    <!-- Share Modal Content -->
+    <div id="share-modal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-white rounded-2xl shadow-xl z-50 hidden opacity-0 scale-95 transition-all duration-300 flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center shrink-0">
+            <h2 class="text-lg font-semibold text-slate-800">Bagikan Dokumen</h2>
+            <button onclick="closeShareModal()" class="text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 rounded">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto">
+            <div class="flex items-center gap-3 mb-6 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div id="modal-file-icon" class="text-2xl"></div>
+                <div class="min-w-0">
+                    <p id="modal-file-name" class="text-sm font-medium text-slate-800 truncate">Nama File</p>
+                    <p class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-lock mr-1"></i> Terenkripsi E2E</p>
+                </div>
+            </div>
+
+            <!-- Form Controls -->
+            <div class="space-y-4">
+                <!-- Access Level -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Hak Akses Tautan</label>
+                    <select id="access-level" class="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block px-3 py-2.5 outline-none transition-shadow">
+                        <option value="read">Bisa Melihat (Read-only)</option>
+                        <option value="write">Bisa Mengedit (Editor)</option>
+                    </select>
+                </div>
+
+                <!-- Expiration Date -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Kedaluwarsa Tautan</label>
+                    <input type="date" id="expiry-date" class="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 block px-3 py-2.5 outline-none transition-shadow">
+                    <p class="text-xs text-slate-500 mt-1">Akses tautan akan dicabut otomatis setelah tanggal ini.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-end gap-3 shrink-0">
+            <button onclick="closeShareModal()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors">
+                Batal
+            </button>
+            <button onclick="generateShareLink()" class="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors flex items-center gap-2" id="btn-generate-link">
+            <i class="fa-solid fa-link"></i>
+            Buat Tautan
+        </button>
+    </div>
+</div>
+</div> <!-- Close Dashboard Wrapper -->
+
+<script>
+    // --- 1. MOCK DATA ---
+        const mockFiles = [
+            { id: 1, name: 'Laporan Keuangan Q3 2026.xlsx', type: 'excel', account: 'Pekerjaan Utama', accountId: 'work', encrypted: true, updated: '2 Menit lalu' },
+            { id: 2, name: 'Pitch Deck Investor.pptx', type: 'ppt', account: 'Pekerjaan Utama', accountId: 'work', encrypted: true, updated: '1 Jam lalu' },
+            { id: 3, name: 'Foto Liburan Bali.zip', type: 'archive', account: 'Drive Pribadi', accountId: 'personal', encrypted: false, updated: 'Kemarin' },
+            { id: 4, name: 'KTP & KK Scan.pdf', type: 'pdf', account: 'Drive Pribadi', accountId: 'personal', encrypted: true, updated: '3 Hari lalu' },
+            { id: 5, name: 'Draft Desain UI UX.fig', type: 'design', account: 'Proyek Sampingan', accountId: 'freelance', encrypted: true, updated: '1 Minggu lalu' },
+            { id: 6, name: 'Catatan Rapat Mingguan.docx', type: 'word', account: 'Pekerjaan Utama', accountId: 'work', encrypted: true, updated: '2 Minggu lalu' },
+            { id: 7, name: 'Tagihan Server AWS.pdf', type: 'pdf', account: 'Proyek Sampingan', accountId: 'freelance', encrypted: true, updated: 'Bulan lalu' }
+        ];
+
+        const mockNotifications = [
+            { id: 1, text: 'Laporan Keuangan Q3 diperbarui oleh [Nama Pengguna].', time: '2 menit lalu', unread: true },
+            { id: 2, text: 'Tautan untuk Pitch Deck Investor telah dibuat.', time: '1 jam lalu', unread: true },
+            { id: 3, text: 'Penyimpanan Drive Pribadi hampir penuh (93%).', time: '5 jam lalu', unread: false },
+            { id: 4, text: 'Sinkronisasi berhasil di semua akun.', time: '1 hari lalu', unread: false }
+        ];
+
+        // Helper functions for Icons
+        function getFileIcon(type) {
+            const icons = {
+                'excel': '<i class="fa-solid fa-file-excel text-emerald-600"></i>',
+                'word': '<i class="fa-solid fa-file-word text-blue-600"></i>',
+                'ppt': '<i class="fa-solid fa-file-powerpoint text-orange-500"></i>',
+                'pdf': '<i class="fa-solid fa-file-pdf text-red-500"></i>',
+                'archive': '<i class="fa-solid fa-file-zipper text-slate-500"></i>',
+                'design': '<i class="fa-brands fa-figma text-purple-500"></i>'
+            };
+            return icons[type] || '<i class="fa-solid fa-file text-slate-400"></i>';
+        }
+
+        // --- 2. RENDER FUNCTIONS ---
+
+        // Render Dashboard Table (Top 3 files)
+        function renderDashboardFiles() {
+            const tbody = document.getElementById('dashboard-recent-files');
+            const recentFiles = mockFiles.slice(0, 3);
+            
+            tbody.innerHTML = recentFiles.map(file => `
+                <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors">
+                    <td class="px-5 py-3 flex items-center gap-3">
+                        <div class="text-xl w-6 text-center">${getFileIcon(file.type)}</div>
+                        <div class="font-medium text-slate-700 truncate max-w-[150px] sm:max-w-xs">${file.name}</div>
+                    </td>
+                    <td class="px-5 py-3 text-slate-500 hidden sm:table-cell">
+                        <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded border border-slate-200">${file.account}</span>
+                    </td>
+                    <td class="px-5 py-3 text-right">
+                        <button onclick="openShareModal(${file.id})" class="text-slate-400 hover:text-brand-600 focus:outline-none" aria-label="Bagikan" title="Bagikan File">
+                            <i class="fa-solid fa-share-nodes"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Render Main File List (with Search filtering)
+        function renderMainFiles(filterQuery = '') {
+            const tbody = document.getElementById('main-file-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            const filteredFiles = mockFiles.filter(file => 
+                file.name.toLowerCase().includes(filterQuery.toLowerCase()) || 
+                file.account.toLowerCase().includes(filterQuery.toLowerCase())
+            );
+
+            if (filteredFiles.length === 0) {
+                tbody.innerHTML = '';
+                tbody.parentElement.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                tbody.parentElement.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                
+                tbody.innerHTML = filteredFiles.map(file => `
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="text-xl w-6 text-center">${getFileIcon(file.type)}</div>
+                                <div class="font-medium text-slate-700 truncate max-w-[180px] sm:max-w-xs">${file.name}</div>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4 text-slate-500 hidden sm:table-cell">
+                            <span class="text-xs bg-slate-100 px-2 py-1 rounded border border-slate-200">${file.account}</span>
+                        </td>
+                        <td class="px-5 py-4 hidden md:table-cell">
+                            ${file.encrypted 
+                                ? '<span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100"><i class="fa-solid fa-lock text-[10px]"></i> E2E</span>' 
+                                : '<span class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200"><i class="fa-solid fa-unlock text-[10px]"></i> Standar</span>'
+                            }
+                        </td>
+                        <td class="px-5 py-4 text-slate-500 text-sm hidden lg:table-cell">
+                            ${file.updated}
+                        </td>
+                        <td class="px-5 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button class="p-1.5 text-slate-400 hover:text-slate-700 rounded focus:outline-none" aria-label="Unduh" title="Unduh">
+                                    <i class="fa-solid fa-download"></i>
+                                </button>
+                                <button onclick="openShareModal(${file.id})" class="p-1.5 text-slate-400 hover:text-brand-600 rounded focus:outline-none" aria-label="Bagikan" title="Bagikan">
+                                    <i class="fa-solid fa-share-nodes"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Render Notifications
+        function renderNotifications() {
+            const list = document.getElementById('notif-list');
+            list.innerHTML = mockNotifications.map(n => `
+                <div class="px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 cursor-pointer flex gap-3 ${n.unread ? 'bg-brand-50/30' : ''}">
+                    <div class="mt-1">
+                        ${n.unread ? '<div class="w-2 h-2 bg-brand-500 rounded-full"></div>' : '<div class="w-2 h-2"></div>'}
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-700 ${n.unread ? 'font-medium' : ''}">${n.text}</p>
+                        <p class="text-xs text-slate-400 mt-1">${n.time}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize Chart.js for Analytics
+        let storageChartInstance = null;
+        function initChart() {
+            const ctx = document.getElementById('storageChart');
+            if (storageChartInstance) return; // Prevent recreation
+
+            storageChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pekerjaan Utama', 'Drive Pribadi', 'Proyek Sampingan'],
+                    datasets: [{
+                        data: [45, 14, 3.5], // Values in GB based on UI mocks
+                        backgroundColor: [
+                            '#3b82f6', // brand-500 (blue)
+                            '#ef4444', // red-500
+                            '#a855f7'  // purple-500
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.parsed + ' GB';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 3. INTERACTIVITY & UI CONTROLS ---
+
+        // Tab Switching
+        function switchTab(tabId) {
+            // Update Navigation UI
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-brand-50', 'text-brand-700');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-50');
+                if(btn.dataset.target === tabId) {
+                    btn.classList.add('active', 'bg-brand-50', 'text-brand-700');
+                    btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+                }
+            });
+
+            // Update Tab Content
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            // Initialize Chart if Analytics tab is opened
+            if (tabId === 'analytics') {
+                initChart();
+            }
+
+            // Close mobile sidebar if open
+            if (window.innerWidth < 1024) {
+                toggleSidebar(false);
+            }
+        }
+
+        // Mobile Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+        let isSidebarOpen = false;
+
+        function toggleSidebar(forceState = null) {
+            isSidebarOpen = forceState !== null ? forceState : !isSidebarOpen;
+            
+            if (isSidebarOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Search Handler
+        function handleSearch(event) {
+            const query = event.target.value;
+            // Sync both search bars (desktop and mobile)
+            document.querySelectorAll('input[type="text"]').forEach(input => {
+                if(input !== event.target) input.value = query;
+            });
+            
+            // Switch to files tab if typing in global search from another tab
+            if (document.getElementById('tab-files').classList.contains('active') === false && query.length > 0) {
+                switchTab('files');
+            }
+            
+            renderMainFiles(query);
+        }
+
+        // Notification Dropdown Toggle
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notif-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('notif-dropdown');
+            const bell = dropdown.previousElementSibling;
+            if (!dropdown.contains(e.target) && !bell.contains(e.target) && !dropdown.classList.contains('hidden')) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // --- 4. SHARE MODAL LOGIC ---
+        const modal = document.getElementById('share-modal');
+        const modalBackdrop = document.getElementById('share-modal-backdrop');
+        let currentShareFileId = null;
+
+        function openShareModal(fileId) {
+            currentShareFileId = fileId;
+            const file = mockFiles.find(f => f.id === fileId);
+            
+            // Populate Modal Info
+            document.getElementById('modal-file-icon').innerHTML = getFileIcon(file.type);
+            document.getElementById('modal-file-name').textContent = file.name;
+            
+            // Show Modal with animation
+            modalBackdrop.classList.remove('hidden');
+            modal.classList.remove('hidden');
+            
+            // Trigger reflow for animation
+            void modal.offsetWidth;
+            
+            modalBackdrop.classList.remove('opacity-0');
+            modal.classList.remove('opacity-0', 'scale-95');
+            modal.classList.add('scale-100');
+        }
+
+        function closeShareModal() {
+            modalBackdrop.classList.add('opacity-0');
+            modal.classList.remove('scale-100');
+            modal.classList.add('opacity-0', 'scale-95');
+            
+            setTimeout(() => {
+                modalBackdrop.classList.add('hidden');
+                modal.classList.add('hidden');
+                
+                // Reset form
+                document.getElementById('access-level').value = 'read';
+                document.getElementById('expiry-date').value = '';
+                document.getElementById('btn-generate-link').innerHTML = '<i class="fa-solid fa-link"></i> Buat Tautan';
+            }, 300); // Wait for transition
+        }
+
+        function generateShareLink() {
+            const btn = document.getElementById('btn-generate-link');
+            // Simulate API Call / Real-time Sync update
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Memproses...';
+            
+            // Simulate real-time sync status update in Header
+            const syncStatus = document.getElementById('sync-status');
+            syncStatus.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin text-brand-500"></i><span class="text-brand-600">Menyinkronkan...</span>';
+            
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Tautan Disalin!';
+                btn.classList.replace('bg-brand-600', 'bg-emerald-600');
+                btn.classList.replace('hover:bg-brand-700', 'hover:bg-emerald-700');
+                
+                // Reset Header Sync Status
+                setTimeout(() => {
+                syncStatus.innerHTML = '<i class="fa-solid fa-check-circle text-emerald-500"></i><span>Tersinkronisasi</span>';
+                setTimeout(closeShareModal, 1000);
+            }, 1000);
+        }, 1500);
+    }
+
+    // --- 5. INITIALIZATION & LOGIN ---
+    
+    // Fungsi bantuan untuk tombol yang belum aktif
+    function showComingSoon(btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = 'Fitur Segera Hadir...';
+        btn.disabled = true;
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 2000);
+    }
+
+    function handleLogin(event) {
+        event.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('login-error');
+        
+        // Validasi form dasar
+        if (password.length < 6) {
+            errorDiv.textContent = 'Kata sandi harus minimal 6 karakter.';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+        
+        // Sembunyikan error jika validasi lolos
+        errorDiv.classList.add('hidden');
+        
+        const btn = document.getElementById('btn-login');
+        const originalContent = btn.innerHTML;
+        
+        // State memproses
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Memvalidasi kredensial...';
+        btn.disabled = true;
+        btn.classList.add('opacity-80', 'cursor-not-allowed');
+
+        // Simulasi proses autentikasi (1.2 detik)
+        setTimeout(() => {
+            document.getElementById('login-view').classList.add('hidden');
+            const dashboard = document.getElementById('dashboard-view');
+            dashboard.classList.remove('hidden');
+            dashboard.classList.add('flex'); // Tampilkan dengan mode flex
+            
+            // Inisialisasi konten dashboard setelah struktur halamannya dirender
+            renderDashboardFiles();
+            renderMainFiles();
+            renderNotifications();
+            switchTab('dashboard'); // Memastikan tampilan kembali ke beranda
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('expiry-date').setAttribute('min', today);
+
+            // Kembalikan state tombol ke bentuk semula (bila nanti user log out)
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            btn.classList.remove('opacity-80', 'cursor-not-allowed');
+        }, 1200);
+    }
+
+    function handleLogout() {
+        // Sembunyikan dashboard, kembalikan tampilan ke layer login
+        const dashboard = document.getElementById('dashboard-view');
+        dashboard.classList.add('hidden');
+        dashboard.classList.remove('flex');
+        
+        document.getElementById('login-view').classList.remove('hidden');
+        
+        // Bersihkan isian kata sandi untuk keamanan (simulasi)
+        document.getElementById('password').value = '';
+    }
+</script>
+</body>
+</html>
