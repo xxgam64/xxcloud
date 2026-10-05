@@ -7,11 +7,25 @@ import {
   User,
   signOut as fbSignOut,
 } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // Initialize Firebase App singleton
 export const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(firebaseApp);
+
+let firestoreInstance: any = null;
+try {
+  const dbId = (firebaseConfig as any).firestoreDatabaseId;
+  firestoreInstance = dbId ? getFirestore(firebaseApp, dbId) : getFirestore(firebaseApp);
+} catch (err) {
+  try {
+    firestoreInstance = getFirestore(firebaseApp);
+  } catch (e) {
+    console.warn('Firestore service initialization deferred:', e);
+  }
+}
+export const db = firestoreInstance;
 
 export const SCOPES = [
   'https://www.googleapis.com/auth/drive',
