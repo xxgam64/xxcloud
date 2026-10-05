@@ -315,6 +315,33 @@
         </main>
     </div>
 
+    <!-- MODAL TAMBAH AKUN -->
+    <div id="add-account-modal-backdrop" class="fixed inset-0 bg-slate-900/40 z-50 hidden opacity-0 transition-opacity duration-300" onclick="closeAddAccountModal()"></div>
+    
+    <div id="add-account-modal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-white rounded-2xl shadow-xl z-50 hidden opacity-0 scale-95 transition-all duration-300 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h2 class="text-base font-semibold text-slate-800">Tautkan Akun Cloud</h2>
+            <button onclick="closeAddAccountModal()" class="text-slate-400 hover:text-slate-700 focus:outline-none rounded">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        
+        <div class="p-8 text-center">
+            <div class="flex justify-center items-center gap-4 mb-6">
+                <i class="fa-solid fa-cloud-bolt text-4xl text-brand-600"></i>
+                <i class="fa-solid fa-link text-slate-300 text-xl"></i>
+                <i class="fa-brands fa-google-drive text-4xl text-blue-500"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Hubungkan Google Drive</h3>
+            <p class="text-sm text-slate-500 mb-8">XXCLOUD memerlukan akses ke Google Drive Anda untuk menyinkronkan dan mengenkripsi file.</p>
+            
+            <button onclick="connectGoogleDrive()" id="btn-connect-gdrive" class="w-full py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-xl text-sm transition-colors flex items-center justify-center gap-3 shadow-sm">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
+                Lanjutkan dengan Google
+            </button>
+        </div>
+    </div>
+
     <!-- MODAL BAGIKAN -->
     <div id="share-modal-backdrop" class="fixed inset-0 bg-slate-900/40 z-50 hidden opacity-0 transition-opacity duration-300" onclick="closeShareModal()"></div>
     
@@ -491,16 +518,52 @@
             }, 3000);
         }
 
+        // FUNGSI MODAL TAMBAH AKUN
+        const addAccountModal = document.getElementById('add-account-modal');
+        const addAccountBackdrop = document.getElementById('add-account-modal-backdrop');
+
+        function openAddAccountModal() {
+            addAccountBackdrop.classList.remove('hidden');
+            addAccountModal.classList.remove('hidden');
+            setTimeout(() => {
+                addAccountBackdrop.classList.remove('opacity-0');
+                addAccountModal.classList.remove('opacity-0', 'scale-95');
+            }, 10);
+        }
+
+        function closeAddAccountModal() {
+            addAccountBackdrop.classList.add('opacity-0');
+            addAccountModal.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                addAccountBackdrop.classList.add('hidden');
+                addAccountModal.classList.add('hidden');
+                document.getElementById('btn-connect-gdrive').innerHTML = '<img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"> Lanjutkan dengan Google';
+            }, 300);
+        }
+
+        function connectGoogleDrive() {
+            const btn = document.getElementById('btn-connect-gdrive');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Menghubungkan...';
+            
+            // Simulasi proses integrasi OAuth
+            setTimeout(() => {
+                closeAddAccountModal();
+                addMockData();
+            }, 1500);
+        }
+
         // SIMULASI MENAUTKAN AKUN (Mengisi Data)
         function addMockData() {
-            // Sembunyikan tombol simulasi
-            document.getElementById('btn-add-mock').classList.add('hidden');
             showToast('Menyinkronkan data dari akun Google Drive...');
             
             // Ubah ikon sinkronisasi di header
             const syncIcon = document.getElementById('sync-status');
             syncIcon.classList.remove('hidden');
             syncIcon.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin text-brand-500"></i><span class="text-brand-600">Sinkronisasi...</span>';
+
+            // Sembunyikan tombol tambah akun top jika ada
+            const btnTop = document.getElementById('btn-add-account-top');
+            if(btnTop) btnTop.classList.add('hidden');
 
             setTimeout(() => {
                 // Isi data simulasi
@@ -531,12 +594,23 @@
                     renderChart();
                 }
 
-            }, 1500); // Simulasi delay jaringan
+            }, 2000); // Simulasi delay jaringan
         }
 
         // Fungsi Master Update UI berdasarkan State Data
         function updateUI(searchQuery = '') {
-            if (!isDataLoaded) return; // Jangan lakukan apa-apa jika data belum dimuat
+            if (!isDataLoaded) {
+                // Tampilkan pesan kosong jika belum ada data
+                document.getElementById('dashboard-empty').classList.remove('hidden');
+                document.getElementById('dashboard-empty').classList.add('flex');
+                document.getElementById('dashboard-content').classList.add('hidden');
+                return; 
+            }
+
+            // Tampilkan isi dashboard, sembunyikan pesan kosong
+            document.getElementById('dashboard-empty').classList.add('hidden');
+            document.getElementById('dashboard-empty').classList.remove('flex');
+            document.getElementById('dashboard-content').classList.remove('hidden');
 
             // 1. Update Sidebar Akun
             const accountList = document.getElementById('account-list');
