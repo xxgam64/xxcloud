@@ -13,6 +13,7 @@ export default defineConfig(() => {
       },
     },
     build: {
+      outDir: 'docs',
       chunkSizeWarningLimit: 2000,
     },
     optimizeDeps: {
