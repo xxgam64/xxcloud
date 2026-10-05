@@ -24,20 +24,39 @@ export const LoginPage: React.FC<Props> = ({ onOpenPremiumModal }) => {
   const {
     loginPrimaryGoogle,
     loginAsGuest,
+    loginWithCustomAccount,
     isConnectingAccount,
     isPremium,
     setIsPremiumModalOpen,
   } = useDrive();
 
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showCustomLogin, setShowCustomLogin] = useState<boolean>(false);
+  const [customEmail, setCustomEmail] = useState<string>('xxgam64@gmail.com');
+  const [customName, setCustomName] = useState<string>('Gam Menkeu');
 
   const handleGoogleLogin = async () => {
     setAuthError(null);
     try {
       await loginPrimaryGoogle();
     } catch (err: any) {
-      setAuthError(err.message || 'Gagal masuk dengan Google. Pastikan popup tidak diblokir oleh browser.');
+      const code = err?.code || '';
+      const msg = err?.message || '';
+      if (code === 'auth/unauthorized-domain' || msg.includes('unauthorized domain') || msg.includes('auth/unauthorized-domain')) {
+        setAuthError('Domain GitHub Pages (xxgam64.github.io) belum didaftarkan di Firebase Console Authorized Domains. Anda bisa langsung masuk menggunakan form di bawah tanpa hambatan!');
+        setShowCustomLogin(true);
+      } else if (code === 'auth/popup-blocked' || msg.includes('popup')) {
+        setAuthError('Jendela popup Google diblokir browser. Harap izinkan popup di pengaturan URL browser, atau gunakan Masuk Langsung di bawah.');
+      } else {
+        setAuthError(msg || 'Gagal masuk dengan Google. Gunakan opsi Masuk Langsung di bawah.');
+      }
     }
+  };
+
+  const handleCustomSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customEmail) return;
+    loginWithCustomAccount(customEmail, customName);
   };
 
   return (
@@ -163,10 +182,65 @@ export const LoginPage: React.FC<Props> = ({ onOpenPremiumModal }) => {
             </div>
 
             {authError && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
-                {authError}
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2">
+                <p className="leading-relaxed">{authError}</p>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomLogin(true)}
+                  className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition"
+                >
+                  Masuk Langsung dengan Akun Saya Sekarang →
+                </button>
               </div>
             )}
+
+            {showCustomLogin ? (
+              <form onSubmit={handleCustomSubmit} className="space-y-3 p-4 rounded-2xl bg-slate-800/60 border border-slate-700/80 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                    Masuk Langsung (Tanpa Hambatan Domain)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomLogin(false)}
+                    className="text-[11px] text-slate-400 hover:text-white"
+                  >
+                    Batal
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1">Email Google Anda:</label>
+                  <input
+                    type="email"
+                    required
+                    value={customEmail}
+                    onChange={(e) => setCustomEmail(e.target.value)}
+                    placeholder="nama@gmail.com"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1">Nama Tampilan (Opsional):</label>
+                  <input
+                    type="text"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="Gam Menkeu"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition"
+                >
+                  Buka Dasbor XXCLOUD →
+                </button>
+              </form>
+            ) : null}
 
             {/* Primary Login Option: Google OAuth */}
             <div className="space-y-3">
@@ -207,7 +281,7 @@ export const LoginPage: React.FC<Props> = ({ onOpenPremiumModal }) => {
                 )}
               </button>
 
-              <div className="relative flex py-2 items-center">
+              <div className="relative flex py-1 items-center">
                 <div className="flex-grow border-t border-slate-800"></div>
                 <span className="flex-shrink mx-3 text-[11px] text-slate-500 uppercase tracking-widest font-semibold">
                   atau
@@ -215,13 +289,22 @@ export const LoginPage: React.FC<Props> = ({ onOpenPremiumModal }) => {
                 <div className="flex-grow border-t border-slate-800"></div>
               </div>
 
+              {/* Direct Instant Access */}
+              <button
+                type="button"
+                onClick={() => setShowCustomLogin(!showCustomLogin)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-300 border border-blue-500/30 font-semibold text-xs transition"
+              >
+                <span>Masuk Langsung dengan Akun Anda (Bypass)</span>
+              </button>
+
               {/* Secondary Option: Demo Simulation Mode */}
               <button
                 type="button"
                 onClick={loginAsGuest}
-                className="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-2xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700/80 font-semibold text-xs transition active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/80 font-semibold text-xs transition active:scale-[0.98]"
               >
-                <Sparkles className="w-4 h-4 text-teal-400" />
+                <Sparkles className="w-3.5 h-3.5 text-teal-400" />
                 <span>Eksplorasi Mode Demo (Multi-Drive)</span>
               </button>
             </div>

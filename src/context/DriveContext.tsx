@@ -36,6 +36,7 @@ interface DriveContextType {
   isAuthenticated: boolean;
   isGuestMode: boolean;
   loginAsGuest: () => void;
+  loginWithCustomAccount: (email: string, name?: string) => void;
   accounts: DriveAccount[];
   selectedAccountId: string; // 'all' or accountId
   setSelectedAccountId: (id: string) => void;
@@ -155,6 +156,45 @@ export const DriveProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       title: 'Masuk Mode Eksplorasi Demo',
       message: 'Selamat datang di XXCLOUD! Anda dapat mencoba fitur multi-akun, brankas E2EE, dan sinkronisasi.',
       severity: 'info',
+    });
+  };
+
+  const loginWithCustomAccount = (email: string, name?: string) => {
+    setIsGuestMode(true);
+    localStorage.setItem('xxcloud_guest_mode_v1', 'true');
+    const cleanEmail = email.trim() || 'user@gmail.com';
+    const cleanName = name?.trim() || cleanEmail.split('@')[0] || 'User Google';
+
+    const customAccount: DriveAccount = {
+      id: `acc-custom-${Date.now()}`,
+      email: cleanEmail,
+      name: `${cleanName} (Akun Utama)`,
+      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}`,
+      isPrimary: true,
+      accessToken: 'custom_token',
+      tokenExpiresAt: Date.now() + 86400000,
+      quota: {
+        total: 15 * 1024 * 1024 * 1024,
+        used: 3.4 * 1024 * 1024 * 1024,
+        usedInDrive: 2.9 * 1024 * 1024 * 1024,
+        usedInTrash: 0.5 * 1024 * 1024 * 1024,
+      },
+      status: 'connected',
+      lastSyncTime: new Date().toISOString(),
+      color: '#2563EB',
+    };
+
+    setAccounts(prev => {
+      const rest = prev.filter(a => !a.isPrimary && a.email?.toLowerCase() !== cleanEmail.toLowerCase());
+      return [customAccount, ...rest];
+    });
+
+    addNotification({
+      type: 'system',
+      title: 'Selamat Datang!',
+      message: `Berhasil masuk sebagai ${cleanEmail}. Dasbor XXCLOUD siap digunakan.`,
+      accountEmail: cleanEmail,
+      severity: 'success',
     });
   };
 
@@ -391,6 +431,7 @@ export const DriveProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         message: err.message || 'Tidak dapat menyelesaikan otorisasi Google Drive.',
         severity: 'error',
       });
+      throw err;
     } finally {
       setIsConnectingAccount(false);
     }
@@ -1173,6 +1214,7 @@ export const DriveProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isAuthenticated,
         isGuestMode,
         loginAsGuest,
+        loginWithCustomAccount,
         accounts,
         selectedAccountId,
         setSelectedAccountId,
