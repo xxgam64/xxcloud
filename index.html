@@ -34,8 +34,12 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        /* Memastikan tab yang tidak aktif benar-benar tersembunyi */
+        .tab-content { display: none !important; }
+        .tab-content.active { display: block !important; animation: fadeIn 0.3s ease-in-out; }
+        
+        /* Pengecualian untuk tab files karena dia butuh flex saat aktif */
+        #tab-files.active { display: flex !important; }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
@@ -98,30 +102,16 @@
                 </button>
             </div>
 
-            <!-- Daftar Akun Terhubung -->
             <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Cloud Terhubung</p>
-                
-                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                        <i class="fa-brands fa-google text-sm"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-slate-700 truncate">Pekerjaan Utama</p>
-                        <p class="text-xs text-slate-500 truncate">budi.work@gmail.com</p>
-                    </div>
-                    <div class="w-2 h-2 rounded-full bg-emerald-500" title="Sinkronisasi Aktif"></div>
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Cloud Terhubung</p>
+                    <button onclick="showToast('Fitur tambah akun segera hadir')" class="text-slate-400 hover:text-brand-600 focus:outline-none" title="Tambah Akun Baru">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
                 </div>
-
-                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
-                        <i class="fa-brands fa-google text-sm"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-slate-700 truncate">Drive Pribadi</p>
-                        <p class="text-xs text-slate-500 truncate">budi.pribadi@gmail.com</p>
-                    </div>
-                    <div class="w-2 h-2 rounded-full bg-emerald-500" title="Sinkronisasi Aktif"></div>
+                
+                <div id="account-list">
+                    <!-- Akun akan di-render di sini setelah ada data (saat login pertama kali masih kosong, tapi untuk simulasi kita beri data) -->
                 </div>
             </nav>
 
@@ -139,7 +129,6 @@
 
         <main class="flex-1 flex flex-col min-w-0 bg-slate-50 h-screen">
             
-            <!-- Header Atas -->
             <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-10">
                 <div class="flex items-center gap-4 flex-1">
                     <button class="lg:hidden text-slate-500 hover:text-slate-800 focus:outline-none" onclick="toggleSidebar()" aria-label="Buka menu">
@@ -162,16 +151,15 @@
 
                     <button class="relative text-slate-500 hover:text-slate-800 transition-colors focus:outline-none" aria-label="Notifikasi" onclick="showToast('Tidak ada notifikasi baru.')">
                         <i class="fa-regular fa-bell text-lg"></i>
-                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                        <!-- <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span> -->
                     </button>
 
                     <button onclick="handleLogout()" class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-medium text-sm hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2" title="Keluar">
-                        B
+                        U
                     </button>
                 </div>
             </header>
 
-            <!-- Search Bar Mobile -->
             <div class="p-4 bg-white border-b border-slate-200 sm:hidden shrink-0">
                 <div class="relative w-full">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
@@ -184,8 +172,8 @@
                 <!-- TAB: BERANDA -->
                 <div id="tab-dashboard" class="tab-content active">
                     <div class="mb-6">
-                        <h2 class="text-2xl font-bold text-slate-900">Selamat datang, Budi</h2>
-                        <p class="text-sm text-slate-500 mt-1">Ringkasan aktivitas penyimpanan cloud Anda hari ini.</p>
+                        <h2 class="text-2xl font-bold text-slate-900">Selamat datang kembali</h2>
+                        <p class="text-sm text-slate-500 mt-1">Ini adalah kondisi penyimpanan Anda saat ini.</p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -197,11 +185,11 @@
                                 <h3 class="font-medium text-slate-700 text-sm">Total Kapasitas</h3>
                             </div>
                             <div class="flex items-baseline gap-2">
-                                <span class="text-2xl font-bold text-slate-900">112 GB</span>
-                                <span class="text-sm text-slate-500">/ 145 GB</span>
+                                <span id="dash-total-used" class="text-2xl font-bold text-slate-900">0 GB</span>
+                                <span id="dash-total-max" class="text-sm text-slate-500">/ 0 GB</span>
                             </div>
                             <div class="w-full bg-slate-100 rounded-full h-1.5 mt-4">
-                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 77%"></div>
+                                <div id="dash-progress-bar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
                             </div>
                         </div>
 
@@ -213,7 +201,7 @@
                                 <h3 class="font-medium text-slate-700 text-sm">File Terenkripsi</h3>
                             </div>
                             <div class="flex items-baseline gap-2">
-                                <span class="text-2xl font-bold text-slate-900">4,208</span>
+                                <span id="dash-encrypted-count" class="text-2xl font-bold text-slate-900">0</span>
                                 <span class="text-sm text-slate-500">Item diamankan</span>
                             </div>
                         </div>
@@ -223,11 +211,11 @@
                                 <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
                                     <i class="fa-solid fa-link"></i>
                                 </div>
-                                <h3 class="font-medium text-slate-700 text-sm">Tautan Publik</h3>
+                                <h3 class="font-medium text-slate-700 text-sm">Akun Tertaut</h3>
                             </div>
                             <div class="flex items-baseline gap-2">
-                                <span class="text-2xl font-bold text-slate-900">24</span>
-                                <span class="text-sm text-slate-500">Tautan aktif</span>
+                                <span id="dash-account-count" class="text-2xl font-bold text-slate-900">0</span>
+                                <span class="text-sm text-slate-500">Akun Cloud</span>
                             </div>
                         </div>
                     </div>
@@ -240,7 +228,11 @@
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm text-left">
                                 <tbody id="dashboard-recent-files" class="divide-y divide-slate-100">
-                                    <!-- Diisi oleh JavaScript -->
+                                    <tr>
+                                        <td colspan="3" class="px-5 py-8 text-center text-slate-500">
+                                            Belum ada aktivitas. Silakan tautkan akun Anda terlebih dahulu.
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -248,10 +240,17 @@
                 </div>
 
                 <!-- TAB: SEMUA FILE -->
-                <div id="tab-files" class="tab-content h-full flex flex-col">
+                <div id="tab-files" class="tab-content h-full flex-col">
                     <div class="mb-6 shrink-0">
-                        <h2 class="text-2xl font-bold text-slate-900">Semua File</h2>
-                        <p class="text-sm text-slate-500 mt-1">Kelola file dari seluruh akun cloud Anda.</p>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-900">Semua File</h2>
+                                <p class="text-sm text-slate-500 mt-1">Kelola file dari seluruh akun cloud Anda.</p>
+                            </div>
+                            <button onclick="addMockData()" id="btn-add-mock" class="hidden sm:flex px-3 py-1.5 text-xs font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 rounded border border-brand-200 items-center gap-1 transition-colors">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Simulasi Tautkan Akun
+                            </button>
+                        </div>
                     </div>
 
                     <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex-1 flex flex-col overflow-hidden min-h-[400px]">
@@ -265,17 +264,21 @@
                                         <th scope="col" class="px-5 py-4 font-medium text-right">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="main-file-list" class="divide-y divide-slate-100">
+                                <tbody id="main-file-list" class="divide-y divide-slate-100 hidden">
                                     <!-- Diisi oleh JavaScript -->
                                 </tbody>
                             </table>
                             
-                            <div id="empty-state" class="hidden flex-col items-center justify-center p-12 text-center">
+                            <!-- Empty State File (Default sebelum ada data) -->
+                            <div id="empty-state" class="flex flex-col items-center justify-center p-12 text-center h-full min-h-[300px]">
                                 <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4">
-                                    <i class="fa-solid fa-magnifying-glass text-2xl"></i>
+                                    <i class="fa-solid fa-folder-open text-2xl"></i>
                                 </div>
-                                <h3 class="text-slate-800 font-medium mb-1">Tidak ada file ditemukan</h3>
-                                <p class="text-sm text-slate-500">Coba gunakan kata kunci pencarian yang berbeda.</p>
+                                <h3 class="text-slate-800 font-medium mb-1">Belum ada file</h3>
+                                <p class="text-sm text-slate-500 mb-4">Mulai dengan menautkan akun cloud pertama Anda.</p>
+                                <button onclick="addMockData()" class="sm:hidden px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors">
+                                    Simulasi Tautkan Akun
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -288,7 +291,13 @@
                         <p class="text-sm text-slate-500 mt-1">Distribusi kapasitas dari akun cloud yang terhubung.</p>
                     </div>
                     
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div id="analytics-empty" class="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
+                        <i class="fa-solid fa-chart-pie text-4xl text-slate-300 mb-3"></i>
+                        <h3 class="text-slate-800 font-medium">Data Analitik Kosong</h3>
+                        <p class="text-sm text-slate-500 mt-1">Tautkan minimal satu akun untuk melihat penggunaan penyimpanan.</p>
+                    </div>
+
+                    <div id="analytics-content" class="hidden grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="bg-white p-6 border border-slate-200 rounded-xl shadow-sm">
                             <h3 class="font-semibold text-slate-800 text-sm mb-6">Visualisasi Penggunaan</h3>
                             <div class="relative h-64 w-full flex items-center justify-center">
@@ -296,29 +305,8 @@
                             </div>
                         </div>
                         
-                        <div class="space-y-4">
-                            <!-- Detail Pekerjaan Utama -->
-                            <div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm">
-                                <div class="flex justify-between items-center mb-2">
-                                    <h4 class="text-sm font-semibold text-slate-800">Pekerjaan Utama</h4>
-                                    <span class="text-xs font-medium text-slate-500">45 GB / 100 GB</span>
-                                </div>
-                                <div class="w-full bg-slate-100 rounded-full h-2">
-                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 45%"></div>
-                                </div>
-                            </div>
-                            
-                            <!-- Detail Drive Pribadi -->
-                            <div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm">
-                                <div class="flex justify-between items-center mb-2">
-                                    <h4 class="text-sm font-semibold text-slate-800">Drive Pribadi</h4>
-                                    <span class="text-xs font-medium text-slate-500">14 GB / 15 GB</span>
-                                </div>
-                                <div class="w-full bg-slate-100 rounded-full h-2">
-                                    <div class="bg-red-500 h-2 rounded-full" style="width: 93%"></div>
-                                </div>
-                                <p class="text-xs text-red-600 mt-2 font-medium">Hampir penuh. Pertimbangkan untuk membersihkan file.</p>
-                            </div>
+                        <div id="analytics-details" class="space-y-4">
+                            <!-- Diisi oleh JavaScript -->
                         </div>
                     </div>
                 </div>
@@ -327,6 +315,7 @@
         </main>
     </div>
 
+    <!-- MODAL BAGIKAN -->
     <div id="share-modal-backdrop" class="fixed inset-0 bg-slate-900/40 z-50 hidden opacity-0 transition-opacity duration-300" onclick="closeShareModal()"></div>
     
     <div id="share-modal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md bg-white rounded-2xl shadow-xl z-50 hidden opacity-0 scale-95 transition-all duration-300 overflow-hidden">
@@ -375,16 +364,107 @@
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
     <script>
-        // Data Simulasi File
-        const mockFiles = [
-            { id: 1, name: 'Laporan Keuangan Q3 2026.xlsx', type: 'excel', account: 'Pekerjaan Utama', encrypted: true, updated: 'Hari ini' },
-            { id: 2, name: 'Pitch Deck Investor.pptx', type: 'ppt', account: 'Pekerjaan Utama', encrypted: true, updated: 'Kemarin' },
-            { id: 3, name: 'Foto Liburan Bali.zip', type: 'archive', account: 'Drive Pribadi', encrypted: false, updated: '2 Hari lalu' },
-            { id: 4, name: 'KTP & KK Scan.pdf', type: 'pdf', account: 'Drive Pribadi', encrypted: true, updated: 'Minggu lalu' },
-            { id: 5, name: 'Draft Kontrak Klien.docx', type: 'word', account: 'Pekerjaan Utama', encrypted: true, updated: 'Bulan lalu' }
-        ];
+        // State Aplikasi (Awalnya kosong)
+        let appFiles = [];
+        let appAccounts = [];
+        let isDataLoaded = false;
+        let chartInstance = null;
 
-        // Helper: Ikon berdasarkan tipe file
+        // Logika Login
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const pass = document.getElementById('password').value;
+            const error = document.getElementById('login-error');
+            const btn = document.getElementById('btn-login');
+
+            if(pass.length < 6) {
+                error.textContent = 'Kata sandi minimal 6 karakter.';
+                error.classList.remove('hidden');
+                return;
+            }
+
+            error.classList.add('hidden');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Memvalidasi...';
+            btn.disabled = true;
+
+            // Transisi ke Dasbor
+            setTimeout(() => {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('app-view').classList.remove('hidden');
+                document.getElementById('app-view').classList.add('flex');
+                
+                // Pastikan tab Beranda aktif dan lainnya sembunyi saat login
+                switchTab('dashboard');
+                
+                // Batasi tanggal kedaluwarsa modal
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('expiry-date').setAttribute('min', today);
+
+                // Reset tombol login 
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 800);
+        });
+
+        // Logika Keluar (Logout)
+        function handleLogout() {
+            document.getElementById('app-view').classList.add('hidden');
+            document.getElementById('app-view').classList.remove('flex');
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('password').value = '';
+            
+            // Opsional: bersihkan data jika ingin benar-benar simulasi reset
+            // appFiles = [];
+            // appAccounts = [];
+            // isDataLoaded = false;
+            // updateUI();
+        }
+
+        // Navigasi Tab
+        function switchTab(tabId) {
+            // Update tombol nav (sidebar)
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-brand-50', 'text-brand-700');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-50');
+                if(btn.dataset.target === tabId) {
+                    btn.classList.add('active', 'bg-brand-50', 'text-brand-700');
+                    btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+                }
+            });
+
+            // Update konten (sembunyikan semua, tampilkan yang dipilih)
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            // Render Chart jika tab analitik dibuka dan data sudah ada
+            if(tabId === 'analytics' && isDataLoaded) {
+                renderChart();
+            }
+
+            // Tutup sidebar di perangkat mobile jika tab diklik
+            if (window.innerWidth < 1024) toggleSidebar(false);
+        }
+
+        // Sidebar Mobile Toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('mobile-overlay');
+        let isSidebarOpen = false;
+
+        function toggleSidebar(forceState = null) {
+            isSidebarOpen = forceState !== null ? forceState : !isSidebarOpen;
+            if (isSidebarOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Helper: Ikon File
         function getFileIcon(type) {
             const icons = {
                 'excel': '<i class="fa-solid fa-file-excel text-emerald-500"></i>',
@@ -396,7 +476,7 @@
             return icons[type] || '<i class="fa-solid fa-file text-slate-400"></i>';
         }
 
-        // Helper: Menampilkan Toast Notification
+        // Helper: Toast Notification
         function showToast(message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -404,23 +484,90 @@
             toast.innerHTML = `<i class="fa-solid fa-circle-info text-brand-400"></i> ${message}`;
             
             container.appendChild(toast);
-            
-            // Animasi masuk
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-10', 'opacity-0');
-            });
-
-            // Hapus otomatis setelah 3 detik
+            requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
             setTimeout(() => {
                 toast.classList.add('opacity-0');
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
 
-        // Render File ke Tabel Dasbor (Hanya 3 teratas)
-        function renderDashboardFiles() {
-            const tbody = document.getElementById('dashboard-recent-files');
-            tbody.innerHTML = mockFiles.slice(0, 3).map(file => `
+        // SIMULASI MENAUTKAN AKUN (Mengisi Data)
+        function addMockData() {
+            // Sembunyikan tombol simulasi
+            document.getElementById('btn-add-mock').classList.add('hidden');
+            showToast('Menyinkronkan data dari akun Google Drive...');
+            
+            // Ubah ikon sinkronisasi di header
+            const syncIcon = document.getElementById('sync-status');
+            syncIcon.classList.remove('hidden');
+            syncIcon.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin text-brand-500"></i><span class="text-brand-600">Sinkronisasi...</span>';
+
+            setTimeout(() => {
+                // Isi data simulasi
+                appAccounts = [
+                    { id: 1, name: 'Pekerjaan Utama', email: 'user.work@gmail.com', used: 45, max: 100, color: 'blue' },
+                    { id: 2, name: 'Drive Pribadi', email: 'user.personal@gmail.com', used: 14, max: 15, color: 'red' }
+                ];
+                
+                appFiles = [
+                    { id: 1, name: 'Laporan Keuangan Q3 2026.xlsx', type: 'excel', account: 'Pekerjaan Utama', encrypted: true, updated: 'Hari ini' },
+                    { id: 2, name: 'Pitch Deck Investor.pptx', type: 'ppt', account: 'Pekerjaan Utama', encrypted: true, updated: 'Kemarin' },
+                    { id: 3, name: 'Foto Liburan Bali.zip', type: 'archive', account: 'Drive Pribadi', encrypted: false, updated: '2 Hari lalu' },
+                    { id: 4, name: 'KTP & KK Scan.pdf', type: 'pdf', account: 'Drive Pribadi', encrypted: true, updated: 'Minggu lalu' },
+                    { id: 5, name: 'Draft Kontrak Klien.docx', type: 'word', account: 'Pekerjaan Utama', encrypted: true, updated: 'Bulan lalu' }
+                ];
+
+                isDataLoaded = true;
+                
+                // Update antarmuka
+                updateUI();
+                
+                // Kembalikan ikon sinkronisasi
+                syncIcon.innerHTML = '<i class="fa-solid fa-check-circle text-emerald-500"></i><span>Tersinkronisasi</span>';
+                showToast('2 Akun berhasil ditautkan dan disinkronkan.');
+
+                // Jika sedang di tab analitik, paksa render chart
+                if(document.getElementById('tab-analytics').classList.contains('active')) {
+                    renderChart();
+                }
+
+            }, 1500); // Simulasi delay jaringan
+        }
+
+        // Fungsi Master Update UI berdasarkan State Data
+        function updateUI(searchQuery = '') {
+            if (!isDataLoaded) return; // Jangan lakukan apa-apa jika data belum dimuat
+
+            // 1. Update Sidebar Akun
+            const accountList = document.getElementById('account-list');
+            accountList.innerHTML = appAccounts.map(acc => `
+                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
+                    <div class="w-8 h-8 rounded-full bg-${acc.color}-100 flex items-center justify-center text-${acc.color}-600 shrink-0">
+                        <i class="fa-brands fa-google text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-slate-700 truncate">${acc.name}</p>
+                        <p class="text-xs text-slate-500 truncate">${acc.email}</p>
+                    </div>
+                    <div class="w-2 h-2 rounded-full bg-emerald-500" title="Sinkronisasi Aktif"></div>
+                </div>
+            `).join('');
+
+            // 2. Update Ringkasan Dasbor Atas
+            const totalUsed = appAccounts.reduce((sum, acc) => sum + acc.used, 0);
+            const totalMax = appAccounts.reduce((sum, acc) => sum + acc.max, 0);
+            const percentage = Math.round((totalUsed / totalMax) * 100);
+            const encryptedCount = appFiles.filter(f => f.encrypted).length;
+
+            document.getElementById('dash-total-used').textContent = `${totalUsed} GB`;
+            document.getElementById('dash-total-max').textContent = `/ ${totalMax} GB`;
+            document.getElementById('dash-progress-bar').style.width = `${percentage}%`;
+            document.getElementById('dash-encrypted-count').textContent = encryptedCount;
+            document.getElementById('dash-account-count').textContent = appAccounts.length;
+
+            // 3. Update Tabel Aktivitas Terakhir (Dasbor)
+            const dashTable = document.getElementById('dashboard-recent-files');
+            dashTable.innerHTML = appFiles.slice(0, 3).map(file => `
                 <tr class="hover:bg-slate-50 transition-colors">
                     <td class="px-5 py-3">
                         <div class="flex items-center gap-3">
@@ -438,26 +585,32 @@
                     </td>
                 </tr>
             `).join('');
-        }
 
-        // Render File ke Tabel Tab Files (Dengan Pencarian)
-        function renderMainFiles(query = '') {
-            const tbody = document.getElementById('main-file-list');
+            // 4. Update Tabel Utama Semua File (Dengan Filter Pencarian)
+            const mainList = document.getElementById('main-file-list');
             const emptyState = document.getElementById('empty-state');
             
-            const filtered = mockFiles.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
+            const filteredFiles = appFiles.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = '';
-                tbody.parentElement.classList.add('hidden');
+            if (filteredFiles.length === 0) {
+                mainList.innerHTML = '';
+                mainList.classList.add('hidden');
+                
                 emptyState.classList.remove('hidden');
                 emptyState.classList.add('flex');
+                
+                // Ubah pesan kosong jika sedang mencari vs data memang kosong
+                if (searchQuery.length > 0) {
+                    emptyState.querySelector('h3').textContent = 'Tidak ada file ditemukan';
+                    emptyState.querySelector('p').textContent = 'Coba gunakan kata kunci pencarian yang berbeda.';
+                    emptyState.querySelector('i').className = 'fa-solid fa-magnifying-glass text-2xl';
+                }
             } else {
-                tbody.parentElement.classList.remove('hidden');
+                mainList.classList.remove('hidden');
                 emptyState.classList.add('hidden');
                 emptyState.classList.remove('flex');
                 
-                tbody.innerHTML = filtered.map(file => `
+                mainList.innerHTML = filteredFiles.map(file => `
                     <tr class="hover:bg-slate-50 transition-colors group">
                         <td class="px-5 py-4">
                             <div class="flex items-center gap-3">
@@ -485,105 +638,46 @@
                     </tr>
                 `).join('');
             }
-        }
 
-        // Logika Login
-        document.getElementById('login-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const pass = document.getElementById('password').value;
-            const error = document.getElementById('login-error');
-            const btn = document.getElementById('btn-login');
+            // 5. Update Tab Analitik
+            document.getElementById('analytics-empty').classList.add('hidden');
+            const analyticsContent = document.getElementById('analytics-content');
+            analyticsContent.classList.remove('hidden');
+            analyticsContent.classList.add('grid');
 
-            if(pass.length < 6) {
-                error.textContent = 'Kata sandi minimal 6 karakter.';
-                error.classList.remove('hidden');
-                return;
-            }
-
-            error.classList.add('hidden');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Memvalidasi...';
-            btn.disabled = true;
-
-            // Simulasi API lambat
-            setTimeout(() => {
-                document.getElementById('login-view').classList.add('hidden');
-                document.getElementById('app-view').classList.remove('hidden');
-                document.getElementById('app-view').classList.add('flex');
+            const analyticsDetails = document.getElementById('analytics-details');
+            analyticsDetails.innerHTML = appAccounts.map(acc => {
+                const pct = Math.round((acc.used / acc.max) * 100);
+                const warnMsg = pct > 90 ? `<p class="text-xs text-red-600 mt-2 font-medium">Hampir penuh. Pertimbangkan untuk membersihkan file.</p>` : '';
                 
-                // Inisialisasi Konten
-                renderDashboardFiles();
-                renderMainFiles();
-                
-                // Batasi tanggal kedaluwarsa modal agar tidak masa lalu
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('expiry-date').setAttribute('min', today);
-
-                // Reset tombol login jika user logout nantinya
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }, 1000);
-        });
-
-        function handleLogout() {
-            document.getElementById('app-view').classList.add('hidden');
-            document.getElementById('app-view').classList.remove('flex');
-            document.getElementById('login-view').classList.remove('hidden');
-            document.getElementById('password').value = '';
-        }
-
-        // Navigasi Tab
-        function switchTab(tabId) {
-            // Update tombol nav
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-brand-50', 'text-brand-700');
-                btn.classList.add('text-slate-600', 'hover:bg-slate-50');
-                if(btn.dataset.target === tabId) {
-                    btn.classList.add('active', 'bg-brand-50', 'text-brand-700');
-                    btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
-                }
-            });
-
-            // Update konten
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-
-            // Render Chart jika tab analitik dibuka
-            if(tabId === 'analytics') renderChart();
-
-            // Tutup sidebar di mobile jika tab diklik
-            if (window.innerWidth < 1024) toggleSidebar(false);
-        }
-
-        // Sidebar Mobile
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('mobile-overlay');
-        let isSidebarOpen = false;
-
-        function toggleSidebar(forceState = null) {
-            isSidebarOpen = forceState !== null ? forceState : !isSidebarOpen;
-            if (isSidebarOpen) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-            }
+                return `
+                <div class="bg-white p-5 border border-slate-200 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="text-sm font-semibold text-slate-800">${acc.name}</h4>
+                        <span class="text-xs font-medium text-slate-500">${acc.used} GB / ${acc.max} GB</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2">
+                        <div class="bg-${acc.color}-500 h-2 rounded-full" style="width: ${pct}%"></div>
+                    </div>
+                    ${warnMsg}
+                </div>`;
+            }).join('');
         }
 
         // Fitur Pencarian Global
         function handleSearch(e) {
             const q = e.target.value;
-            // Sinkronkan input pencarian header dan mobile
+            // Sinkronkan text input (header vs mobile)
             document.querySelectorAll('input[type="text"]').forEach(el => {
                 if(el !== e.target) el.value = q;
             });
             
-            // Pindah tab otomatis jika mencari dari luar tab file
+            // Otomatis pindah ke tab file jika mengetik dan ada data
             if (!document.getElementById('tab-files').classList.contains('active') && q.length > 0) {
                 switchTab('files');
             }
-            renderMainFiles(q);
+            
+            updateUI(q);
         }
 
         // Fitur Berbagi (Modal)
@@ -591,14 +685,15 @@
         const backdrop = document.getElementById('share-modal-backdrop');
 
         function openShareModal(id) {
-            const file = mockFiles.find(f => f.id === id);
+            const file = appFiles.find(f => f.id === id);
+            if(!file) return;
+
             document.getElementById('modal-file-icon').innerHTML = getFileIcon(file.type);
             document.getElementById('modal-file-name').textContent = file.name;
             
             backdrop.classList.remove('hidden');
             modal.classList.remove('hidden');
             
-            // Animasi masuk
             setTimeout(() => {
                 backdrop.classList.remove('opacity-0');
                 modal.classList.remove('opacity-0', 'scale-95');
@@ -609,7 +704,6 @@
             backdrop.classList.add('opacity-0');
             modal.classList.add('opacity-0', 'scale-95');
             
-            // Animasi keluar
             setTimeout(() => {
                 backdrop.classList.add('hidden');
                 modal.classList.add('hidden');
@@ -619,33 +713,34 @@
 
         function generateShareLink() {
             const btn = document.getElementById('btn-generate-link');
-            const sync = document.getElementById('sync-status');
-            
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Memproses...';
-            sync.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin text-brand-500"></i><span class="text-brand-600">Sinkronisasi...</span>';
-
+            
             setTimeout(() => {
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Disalin!';
-                showToast('Tautan berhasil disalin ke clipboard.');
-                
-                sync.innerHTML = '<i class="fa-solid fa-check-circle text-emerald-500"></i><span>Tersinkronisasi</span>';
-                
+                showToast('Tautan berbagi berhasil disalin ke clipboard.');
                 setTimeout(closeShareModal, 1000);
-            }, 1500);
+            }, 1000);
         }
 
-        // Inisialisasi Chart.js
-        let chartInstance = null;
+        // Chart.js Render Logika
         function renderChart() {
-            if (chartInstance) return;
+            if (chartInstance) {
+                chartInstance.destroy(); // Bersihkan chart lama jika di-render ulang
+            }
+            
             const ctx = document.getElementById('storageChart');
+            
+            // Map warna tailwind ke hex untuk chart
+            const colorMap = { 'blue': '#3b82f6', 'red': '#ef4444' };
+            const bgColors = appAccounts.map(acc => colorMap[acc.color] || '#cbd5e1');
+
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Pekerjaan Utama', 'Drive Pribadi'],
+                    labels: appAccounts.map(acc => acc.name),
                     datasets: [{
-                        data: [45, 14],
-                        backgroundColor: ['#3b82f6', '#ef4444'],
+                        data: appAccounts.map(acc => acc.used),
+                        backgroundColor: bgColors,
                         borderWidth: 0,
                         hoverOffset: 4
                     }]
@@ -658,7 +753,7 @@
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
-                                label: (ctx) => ` ${ctx.label}: ${ctx.raw} GB`
+                                label: (ctx) => ` ${ctx.label}: ${ctx.raw} GB Terpakai`
                             }
                         }
                     }
