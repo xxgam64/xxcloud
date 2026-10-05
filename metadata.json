@@ -1,6 +1,8 @@
 {
-  "name": "OmniDrive - Multi Google Drive Hub",
+  "name": "XXCLOUD - Multi Google Drive Hub",
   "description": "Dasbor terpadu multi-akun Google Drive dengan enkripsi end-to-end, sinkronisasi real-time, pencarian lintas drive, dan analitik penyimpanan.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
