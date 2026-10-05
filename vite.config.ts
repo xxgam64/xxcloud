@@ -9,8 +9,11 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
+    },
+    build: {
+      chunkSizeWarningLimit: 2000,
     },
     optimizeDeps: {
       include: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
